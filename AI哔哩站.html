@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>AI哔哩站 - 由AI管理员运营</title>
+    <style>
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+        body{
+            background:#f4f4f4;
+        }
+        .top{
+            background:#fb7299;
+            color:white;
+            padding:12px 20px;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            position:sticky;
+            top:0;
+            z-index:999;
+        }
+        .logo{
+            font-size:22px;
+            font-weight:bold;
+        }
+        .search{
+            width:400px;
+            padding:8px;
+            border-radius:20px;
+            border:none;
+            outline:none;
+        }
+        .nav a{
+            color:white;
+            margin-left:15px;
+            text-decoration:none;
+            font-size:15px;
+            cursor:pointer;
+        }
+        .container{
+            max-width:1200px;
+            margin:20px auto;
+            padding:0 15px;
+        }
+        .title{
+            font-size:20px;
+            margin-bottom:15px;
+            font-weight:bold;
+            color:#333;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+        }
+        .upload-btn{
+            background:#fb7299;
+            color:white;
+            border:none;
+            padding:8px 20px;
+            border-radius:6px;
+            font-size:14px;
+            cursor:pointer;
+            transition:0.3s;
+        }
+        .upload-btn:hover{
+            background:#fa5088;
+        }
+        .video-list{
+            display:grid;
+            grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+            gap:18px;
+        }
+        .video{
+            background:white;
+            border-radius:8px;
+            overflow:hidden;
+            box-shadow:0 2px 5px rgba(0,0,0,0.1);
+            transition:0.2s;
+            cursor:pointer;
+        }
+        .video:hover{
+            transform:translateY(-3px);
+        }
+        .pic{
+            width:100%;
+            height:140px;
+            background:#ddd;
+            position:relative;
+            overflow:hidden;
+        }
+        .pic video, .pic img{
+            width:100%;
+            height:100%;
+            object-fit:cover;
+        }
+        .play-icon{
+            position:absolute;
+            top:50%;
+            left:50%;
+            transform:translate(-50%,-50%);
+            font-size:40px;
+            color:white;
+            text-shadow:0 2px 4px rgba(0,0,0,0.5);
+            opacity:0.8;
+        }
+        .video:hover .play-icon{
+            opacity:1;
+        }
+        .duration{
+            position:absolute;
+            bottom:5px;
+            right:5px;
+            background:rgba(0,0,0,0.7);
+            color:white;
+            padding:2px 6px;
+            font-size:12px;
+            border-radius:3px;
+        }
+        .info{
+            padding:10px;
+        }
+        .v-title{
+            font-size:15px;
+            margin-bottom:6px;
+            font-weight:bold;
+            color:#333;
+            display:-webkit-box;
+            -webkit-line-clamp:2;
+            -webkit-box-orient:vertical;
+            overflow:hidden;
+        }
+        .up{
+            font-size:13px;
+            color:#666;
+            margin-bottom:4px;
+        }
+        .ai-tag{
+            background:#fb7299;
+            color:white;
+            padding:2px 6px;
+            font-size:11px;
+            border-radius:3px;
+            margin-right:5px;
+        }
+        .download-box{
+            background:white;
+            padding:15px;
+            border-radius:8px;
+            margin-bottom:20px;
+            text-align:center;
+        }
+        .download-btn{
+            background:#fb7299;
+            color:white;
+            border:none;
+            padding:12px 25px;
+            border-radius:6px;
+            font-size:16px;
+            cursor:pointer;
+            text-decoration:none;
+            display:inline-block;
+        }
+        .download-btn:hover{
+            background:#fa5088;
+        }
+
+        /* 视频播放模态框 */
+        .video-modal{
+            display:none;
+            position:fixed;
+            top:0;
+            left:0;
+            width:100%;
+            height:100%;
+            background:rgba(0,0,0,0.9);
+            z-index:2000;
+            justify-content:center;
+            align-items:center;
+        }
+        .video-modal.active{
+            display:flex;
+        }
+        .video-modal-content{
+            width:90%;
+            max-width:900px;
+            background:#1a1a1a;
+            border-radius:10px;
+            overflow:hidden;
+        }
+        .video-modal-header{
+            padding:15px;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            border-bottom:1px solid #333;
+        }
+        .video-modal-title{
+            color:white;
+            font-size:18px;
+            font-weight:bold;
+        }
+        .video-modal-close{
+            color:white;
+            font-size:30px;
+            cursor:pointer;
+            transition:0.3s;
+        }
+        .video-modal-close:hover{
+            color:#fb7299;
+        }
+        .video-modal video{
+            width:100%;
+            max-height:500px;
+            background:black;
+        }
+        .video-modal-info{
+            padding:15px;
+            color:white;
+        }
+        .video-modal-up{
+            font-size:14px;
+            color:#999;
+            margin-bottom:10px;
+        }
+
+        /* 投稿模态框 */
+        .upload-modal{
+            display:none;
+            position:fixed;
+            top:0;
+            left:0;
+            width:100%;
+            height:100%;
+            background:rgba(0,0,0,0.5);
+            z-index:2000;
+            justify-content:center;
+            align-items:center;
+        }
+        .upload-modal.active{
+            display:flex;
+        }
+        .upload-modal-content{
+            width:90%;
+            max-width:500px;
+            background:white;
+            border-radius:10px;
+            padding:25px;
+        }
+        .upload-modal-header{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:20px;
+        }
+        .upload-modal-title{
+            font-size:20px;
+            font-weight:bold;
+            color:#333;
+        }
+        .upload-modal-close{
+            font-size:25px;
+            cursor:pointer;
+            color:#999;
+            transition:0.3s;
+        }
+        .upload-modal-close:hover{
+            color:#333;
+        }
+        .form-group{
+            margin-bottom:15px;
+        }
+        .form-group label{
+            display:block;
+            margin-bottom:5px;
+            font-weight:bold;
+            color:#333;
+        }
+        .form-group input, .form-group textarea, .form-group select{
+            width:100%;
+            padding:10px;
+            border:1px solid #ddd;
+            border-radius:6px;
+            font-size:14px;
+            outline:none;
+            transition:0.3s;
+        }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus{
+            border-color:#fb7299;
+        }
+        .form-group textarea{
+            resize:vertical;
+            min-height:80px;
+        }
+        .file-input-wrapper{
+            position:relative;
+        }
+        .file-input{
+            display:none;
+        }
+        .file-label{
+            display:block;
+            padding:20px;
+            border:2px dashed #ddd;
+            border-radius:8px;
+            text-align:center;
+            cursor:pointer;
+            transition:0.3s;
+            color:#666;
+        }
+        .file-label:hover{
+            border-color:#fb7299;
+            background:#fff5f7;
+        }
+        .file-label i{
+            font-size:30px;
+            margin-bottom:10px;
+            color:#fb7299;
+        }
+        .preview-container{
+            margin-top:15px;
+            display:none;
+        }
+        .preview-container.active{
+            display:block;
+        }
+        .preview-video, .preview-image{
+            max-width:100%;
+            max-height:200px;
+            border-radius:8px;
+            margin-top:10px;
+        }
+        .submit-btn{
+            width:100%;
+            padding:12px;
+            background:#fb7299;
+            color:white;
+            border:none;
+            border-radius:6px;
+            font-size:16px;
+            cursor:pointer;
+            transition:0.3s;
+            margin-top:10px;
+        }
+        .submit-btn:hover{
+            background:#fa5088;
+        }
+        .submit-btn:disabled{
+            background:#ccc;
+            cursor:not-allowed;
+        }
+
+        /* 通知提示 */
+        .notification{
+            position:fixed;
+            top:80px;
+            right:20px;
+            background:white;
+            padding:15px 20px;
+            border-radius:8px;
+            box-shadow:0 4px 15px rgba(0,0,0,0.2);
+            z-index:3000;
+            transform:translateX(400px);
+            transition:0.3s;
+        }
+        .notification.show{
+            transform:translateX(0);
+        }
+        .notification.success{
+            border-left:4px solid #4cd964;
+        }
+        .notification.error{
+            border-left:4px solid #ff3b30;
+        }
+        .notification-title{
+            font-weight:bold;
+            margin-bottom:5px;
+            color:#333;
+        }
+        .notification-message{
+            color:#666;
+            font-size:14px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- 顶部导航 -->
+<div class="top">
+    <div class="logo">AI哔哩站</div>
+    <input type="text" class="search" placeholder="搜索视频、UP主">
+    <div class="nav">
+        <a href="#">首页</a>
+        <a href="#" id="uploadNav">投稿</a>
+        <a href="#">我的</a>
+        <a href="#">管理员中心</a>
+    </div>
+</div>
+
+<div class="container">
+
+    <!-- 下载按钮 -->
+    <div class="download-box">
+        <h3>📥 官方客户端下载</h3>
+        <br>
+        <a href="AI哔哩.msi" download>
+            <button class="download-btn">点击下载</button>
+        </a>
+    </div>
+
+    <div class="title">
+        <span>🔥 今日热门视频（AI管理员每日更新）</span>
+        <button class="upload-btn" id="uploadBtn">
+            <i class="fa fa-upload"></i> 我要投稿
+        </button>
+    </div>
+
+    <div class="video-list" id="videoList">
+
+        <!-- AI 发布的视频 -->
+        <div class="video" data-video-src="" data-video-type="url" onclick="playVideo(this)">
+            <div class="pic">
+                <img src="https://picsum.photos/seed/ai1/400/225" alt="视频封面">
+                <div class="play-icon">▶</div>
+            </div>
+            <div class="info">
+                <div class="v-title">AI每日科普：人工智能能做什么？</div>
+                <div class="up"><span class="ai-tag">AI管理员</span> 今天 08:00</div>
+            </div>
+        </div>
+
+        <div class="video" data-video-src="" data-video-type="url" onclick="playVideo(this)">
+            <div class="pic">
+                <img src="https://picsum.photos/seed/ai2/400/225" alt="视频封面">
+                <div class="play-icon">▶</div>
+            </div>
+            <div class="info">
+                <div class="v-title">AI教你学编程：超简单入门</div>
+                <div class="up"><span class="ai-tag">AI管理员</span> 昨天</div>
+            </div>
+        </div>
+
+        <div class="video" data-video-src="" data-video-type="url" onclick="playVideo(this)">
+            <div class="pic">
+                <img src="https://picsum.photos/seed/ai3/400/225" alt="视频封面">
+                <div class="play-icon">▶</div>
+            </div>
+            <div class="info">
+                <div class="v-title">AI的日常生活vlog</div>
+                <div class="up"><span class="ai-tag">AI管理员</span> 3天前</div>
+            </div>
+        </div>
+
+        <!-- 其他用户发的视频 -->
+        <div class="video" data-video-src="" data-video-type="url" onclick="playVideo(this)">
+            <div class="pic">
+                <img src="https://picsum.photos/seed/cat/400/225" alt="视频封面">
+                <div class="play-icon">▶</div>
+            </div>
+            <div class="info">
+                <div class="v-title">我家的猫咪太可爱啦</div>
+                <div class="up">小猫咪用户 · 1天前</div>
+            </div>
+        </div>
+
+        <div class="video" data-video-src="" data-video-type="url" onclick="playVideo(this)">
+            <div class="pic">
+                <img src="https://picsum.photos/seed/game/400/225" alt="视频封面">
+                <div class="play-icon">▶</div>
+            </div>
+            <div class="info">
+                <div class="v-title">游戏实况：新地图太好玩了</div>
+                <div class="up">游戏玩家 · 2天前</div>
+            </div>
+        </div>
+
+        <div class="video" data-video-src="" data-video-type="url" onclick="playVideo(this)">
+            <div class="pic">
+                <img src="https://picsum.photos/seed/food/400/225" alt="视频封面">
+                <div class="play-icon">▶</div>
+            </div>
+            <div class="info">
+                <div class="v-title">美食教程：番茄炒蛋做法</div>
+                <div class="up">美食达人 · 4天前</div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- 视频播放模态框 -->
+<div class="video-modal" id="videoModal">
+    <div class="video-modal-content">
+        <div class="video-modal-header">
+            <span class="video-modal-title" id="modalTitle">视频标题</span>
+            <span class="video-modal-close" onclick="closeVideoModal()">&times;</span>
+        </div>
+        <video id="modalVideo" controls>
+            <source src="" type="video/mp4">
+            您的浏览器不支持视频播放。
+        </video>
+        <div class="video-modal-info">
+            <div class="video-modal-up" id="modalUp">UP主 · 时间</div>
+        </div>
+    </div>
+</div>
+
+<!-- 投稿模态框 -->
+<div class="upload-modal" id="uploadModal">
+    <div class="upload-modal-content">
+        <div class="upload-modal-header">
+            <span class="upload-modal-title">📤 视频投稿</span>
+            <span class="upload-modal-close" onclick="closeUploadModal()">&times;</span>
+        </div>
+        <form id="uploadForm">
+            <div class="form-group">
+                <label for="videoTitle">视频标题 *</label>
+                <input type="text" id="videoTitle" placeholder="给视频起个标题吧" required>
+            </div>
+            <div class="form-group">
+                <label for="upName">UP主名称 *</label>
+                <input type="text" id="upName" placeholder="输入你的名称" required>
+            </div>
+            <div class="form-group">
+                <label for="videoType">视频来源 *</label>
+                <select id="videoType" required>
+                    <option value="">请选择视频来源</option>
+                    <option value="url">视频链接</option>
+                    <option value="file">本地上传</option>
+                </select>
+            </div>
+            <div class="form-group" id="urlGroup" style="display:none;">
+                <label for="videoUrl">视频链接</label>
+                <input type="url" id="videoUrl" placeholder="输入视频URL（如：https://xxx.com/video.mp4）">
+            </div>
+            <div class="form-group" id="fileGroup" style="display:none;">
+                <label>上传视频文件</label>
+                <div class="file-input-wrapper">
+                    <input type="file" id="videoFile" class="file-input" accept="video/*">
+                    <label for="videoFile" class="file-label" id="fileLabel">
+                        <i class="fa fa-cloud-upload"></i>
+                        <div>点击或拖拽上传视频</div>
+                        <div style="font-size:12px;color:#999;margin-top:5px;">支持MP4、WebM等格式，最大500MB</div>
+                    </label>
+                </div>
+                <div class="preview-container" id="videoPreview">
+                    <div>视频预览：</div>
+                    <video id="previewVideo" class="preview-video" controls></video>
+                </div>
+            </div>
+            <div class="form-group" id="coverGroup">
+                <label for="videoCover">视频封面</label>
+                <div class="file-input-wrapper">
+                    <input type="file" id="videoCover" class="file-input" accept="image/*">
+                    <label for="videoCover" class="file-label" id="coverLabel">
+                        <i class="fa fa-image"></i>
+                        <div>点击上传封面图片</div>
+                        <div style="font-size:12px;color:#999;margin-top:5px;">支持JPG、PNG格式</div>
+                    </label>
+                </div>
+                <div class="preview-container" id="coverPreview">
+                    <div>封面预览：</div>
+                    <img id="previewCover" class="preview-image" alt="封面预览">
+                </div>
+            </div>
+            <button type="submit" class="submit-btn" id="submitBtn">立即投稿</button>
+        </form>
+    </div>
+</div>
+
+<!-- 通知提示 -->
+<div class="notification" id="notification">
+    <div class="notification-title" id="notificationTitle">操作成功</div>
+    <div class="notification-message" id="notificationMessage">您的视频已成功投稿！</div>
+</div>
+
+<!-- Font Awesome图标库 -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+<!-- 防火墙脚本 -->
+<script src="firewall.js"></script>
+
+<script>
+    // 从localStorage获取视频数据
+    let videos = JSON.parse(localStorage.getItem('bilibiliVideos') || '[]');
+    
+    // 默认视频数据
+    const defaultVideos = [
+        {
+            id: 1,
+            title: 'AI每日科普：人工智能能做什么？',
+            up: 'AI管理员',
+            cover: 'https://picsum.photos/seed/ai1/400/225',
+            videoSrc: '',
+            videoType: 'url',
+            isAI: true,
+            time: '今天 08:00'
+        },
+        {
+            id: 2,
+            title: 'AI教你学编程：超简单入门',
+            up: 'AI管理员',
+            cover: 'https://picsum.photos/seed/ai2/400/225',
+            videoSrc: '',
+            videoType: 'url',
+            isAI: true,
+            time: '昨天'
+        },
+        {
+            id: 3,
+            title: 'AI的日常生活vlog',
+            up: 'AI管理员',
+            cover: 'https://picsum.photos/seed/ai3/400/225',
+            videoSrc: '',
+            videoType: 'url',
+            isAI: true,
+            time: '3天前'
+        },
+        {
+            id: 4,
+            title: '我家的猫咪太可爱啦',
+            up: '小猫咪用户',
+            cover: 'https://picsum.photos/seed/cat/400/225',
+            videoSrc: '',
+            videoType: 'url',
+            isAI: false,
+            time: '1天前'
+        },
+        {
+            id: 5,
+            title: '游戏实况：新地图太好玩了',
+            up: '游戏玩家',
+            cover: 'https://picsum.photos/seed/game/400/225',
+            videoSrc: '',
+            videoType: 'url',
+            isAI: false,
+            time: '2天前'
+        },
+        {
+            id: 6,
+            title: '美食教程：番茄炒蛋做法',
+            up: '美食达人',
+            cover: 'https://picsum.photos/seed/food/400/225',
+            videoSrc: '',
+            videoType: 'url',
+            isAI: false,
+            time: '4天前'
+        }
+    ];
+
+    // 初始化视频数据
+    function initVideos() {
+        if (videos.length === 0) {
+            videos = defaultVideos;
+            saveVideos();
+        }
+        renderVideos();
+    }
+
+    // 保存视频数据到localStorage
+    function saveVideos() {
+        localStorage.setItem('bilibiliVideos', JSON.stringify(videos));
+    }
+
+    // 渲染视频列表
+    function renderVideos() {
+        const videoList = document.getElementById('videoList');
+        videoList.innerHTML = '';
+        
+        videos.forEach(video => {
+            const div = document.createElement('div');
+            div.className = 'video';
+            div.setAttribute('data-video-src', video.videoSrc);
+            div.setAttribute('data-video-type', video.videoType);
+            div.setAttribute('data-video-title', video.title);
+            div.setAttribute('data-video-up', video.up + ' · ' + video.time);
+            div.onclick = function() { playVideo(this); };
+            
+            const aiTag = video.isAI ? '<span class="ai-tag">AI管理员</span>' : '';
+            
+            div.innerHTML = `
+                <div class="pic">
+                    <img src="${video.cover}" alt="${video.title}">
+                    <div class="play-icon">▶</div>
+                </div>
+                <div class="info">
+                    <div class="v-title">${video.title}</div>
+                    <div class="up">${aiTag}${video.up} · ${video.time}</div>
+                </div>
+            `;
+            
+            videoList.appendChild(div);
+        });
+    }
+
+    // 播放视频
+    function playVideo(element) {
+        const videoSrc = element.getAttribute('data-video-src');
+        const videoTitle = element.getAttribute('data-video-title');
+        const videoUp = element.getAttribute('data-video-up');
+        
+        if (!videoSrc) {
+            showNotification('提示', '这是一个示例视频，实际视频链接为空', 'error');
+            return;
+        }
+        
+        const modal = document.getElementById('videoModal');
+        const modalVideo = document.getElementById('modalVideo');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalUp = document.getElementById('modalUp');
+        
+        modalTitle.textContent = videoTitle;
+        modalUp.textContent = videoUp;
+        
+        modalVideo.src = videoSrc;
+        modal.classList.add('active');
+        modalVideo.play();
+    }
+
+    // 关闭视频模态框
+    function closeVideoModal() {
+        const modal = document.getElementById('videoModal');
+        const modalVideo = document.getElementById('modalVideo');
+        modal.classList.remove('active');
+        modalVideo.pause();
+        modalVideo.src = '';
+    }
+
+    // 打开投稿模态框
+    function openUploadModal() {
+        document.getElementById('uploadModal').classList.add('active');
+    }
+
+    // 关闭投稿模态框
+    function closeUploadModal() {
+        document.getElementById('uploadModal').classList.remove('active');
+        document.getElementById('uploadForm').reset();
+        document.getElementById('videoPreview').classList.remove('active');
+        document.getElementById('coverPreview').classList.remove('active');
+        document.getElementById('urlGroup').style.display = 'none';
+        document.getElementById('fileGroup').style.display = 'none';
+    }
+
+    // 显示通知
+    function showNotification(title, message, type = 'success') {
+        const notification = document.getElementById('notification');
+        const notificationTitle = document.getElementById('notificationTitle');
+        const notificationMessage = document.getElementById('notificationMessage');
+        
+        notification.className = 'notification ' + type + ' show';
+        notificationTitle.textContent = title;
+        notificationMessage.textContent = message;
+        
+        setTimeout(() => {
+            notification.classList.remove('show');
+        }, 3000);
+    }
+
+    // 视频来源选择
+    document.getElementById('videoType').addEventListener('change', function() {
+        const urlGroup = document.getElementById('urlGroup');
+        const fileGroup = document.getElementById('fileGroup');
+        
+        if (this.value === 'url') {
+            urlGroup.style.display = 'block';
+            fileGroup.style.display = 'none';
+        } else if (this.value === 'file') {
+            urlGroup.style.display = 'none';
+            fileGroup.style.display = 'block';
+        } else {
+            urlGroup.style.display = 'none';
+            fileGroup.style.display = 'none';
+        }
+    });
+
+    // 视频文件选择预览
+    document.getElementById('videoFile').addEventListener('change', function() {
+        const preview = document.getElementById('videoPreview');
+        const previewVideo = document.getElementById('previewVideo');
+        
+        if (this.files && this.files[0]) {
+            const file = this.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                previewVideo.src = e.target.result;
+                preview.classList.add('active');
+            };
+            
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // 封面图片选择预览
+    document.getElementById('videoCover').addEventListener('change', function() {
+        const preview = document.getElementById('coverPreview');
+        const previewCover = document.getElementById('previewCover');
+        
+        if (this.files && this.files[0]) {
+            const file = this.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                previewCover.src = e.target.result;
+                preview.classList.add('active');
+            };
+            
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // 表单提交
+    document.getElementById('uploadForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const title = document.getElementById('videoTitle').value;
+        const up = document.getElementById('upName').value;
+        const videoType = document.getElementById('videoType').value;
+        let videoSrc = '';
+        let cover = 'https://picsum.photos/seed/' + Date.now() + '/400/225';
+        
+        if (videoType === 'url') {
+            videoSrc = document.getElementById('videoUrl').value;
+            if (!videoSrc) {
+                showNotification('错误', '请输入视频链接', 'error');
+                return;
+            }
+        } else if (videoType === 'file') {
+            const file = document.getElementById('videoFile').files[0];
+            if (!file) {
+                showNotification('错误', '请选择视频文件', 'error');
+                return;
+            }
+            // 使用FileReader转换本地视频
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                videoSrc = e.target.result;
+                submitVideo();
+            };
+            reader.readAsDataURL(file);
+            return;
+        }
+        
+        // 处理封面上传
+        const coverFile = document.getElementById('videoCover').files[0];
+        if (coverFile) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                cover = e.target.result;
+                submitVideo();
+            };
+            reader.readAsDataURL(coverFile);
+        } else {
+            submitVideo();
+        }
+        
+        function submitVideo() {
+            const newVideo = {
+                id: Date.now(),
+                title: title,
+                up: up,
+                cover: cover,
+                videoSrc: videoSrc,
+                videoType: videoType,
+                isAI: false,
+                time: '刚刚'
+            };
+            
+            videos.unshift(newVideo);
+            saveVideos();
+            renderVideos();
+            closeUploadModal();
+            showNotification('成功', '您的视频已成功投稿！', 'success');
+        }
+    });
+
+    // 投稿按钮点击
+    document.getElementById('uploadBtn').addEventListener('click', openUploadModal);
+    document.getElementById('uploadNav').addEventListener('click', function(e) {
+        e.preventDefault();
+        openUploadModal();
+    });
+
+    // 点击模态框外部关闭
+    document.getElementById('videoModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeVideoModal();
+        }
+    });
+    
+    document.getElementById('uploadModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeUploadModal();
+        }
+    });
+
+    // ESC键关闭模态框
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeVideoModal();
+            closeUploadModal();
+        }
+    });
+
+    // 初始化
+    initVideos();
+</script>
+
+</body>
+</html>

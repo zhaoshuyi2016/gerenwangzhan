@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>反馈管理平台 - 赵述一</title>
+    <!-- 引入Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+    <!-- 配置Tailwind自定义主题 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4F46E5', // 主色调：靛蓝色
+                        secondary: '#10B981', // 辅助色：绿色
+                        accent: '#F59E0B', // 强调色：琥珀色
+                        dark: '#1E293B',
+                        light: '#F8FAFC'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 20px rgba(0, 0, 0, 0.05)',
+                        'hover': '0 8px 30px rgba(0, 0, 0, 0.12)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- 自定义工具类 -->
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+            .transition-smooth {
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            .bg-gradient-primary {
+                background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-dark font-sans antialiased">
+    <!-- 登录页面 -->
+    <div id="loginPage" class="min-h-screen flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-soft p-8 max-w-md w-full">
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 rounded-lg bg-gradient-primary flex items-center justify-center text-white mx-auto mb-4">
+                    <i class="fa fa-lock text-2xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold">反馈管理平台</h2>
+                <p class="text-gray-600 mt-2">请登录以查看和管理反馈</p>
+            </div>
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label for="adminUsername" class="block text-sm font-medium text-gray-700 mb-1">用户名</label>
+                    <input type="text" id="adminUsername" name="adminUsername" placeholder="请输入用户名" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-smooth">
+                </div>
+                <div>
+                    <label for="adminPassword" class="block text-sm font-medium text-gray-700 mb-1">密码</label>
+                    <input type="password" id="adminPassword" name="adminPassword" placeholder="请输入密码" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-smooth">
+                </div>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="remember" name="remember" class="h-4 w-4 text-primary focus:ring-primary/20 border-gray-300 rounded">
+                        <label for="remember" class="ml-2 block text-sm text-gray-700">记住我</label>
+                    </div>
+                    <a href="#" class="text-sm text-primary hover:text-primary/80 transition-smooth">忘记密码？</a>
+                </div>
+                <button type="submit" class="w-full px-4 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-smooth font-medium shadow-md hover:shadow-lg">
+                    登录
+                </button>
+            </form>
+            <div class="mt-6 text-center">
+                <p class="text-sm text-gray-600">默认登录信息：<br>用户名: admin<br>密码: admin123</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 管理平台主页面 -->
+    <div id="adminPage" class="hidden">
+        <!-- 导航栏 -->
+        <header id="navbar" class="fixed w-full top-0 z-50 bg-white/90 backdrop-blur-sm shadow-soft transition-smooth">
+            <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+                <!-- Logo和名称 -->
+                <div class="flex items-center space-x-2">
+                    <div class="w-10 h-10 rounded-lg bg-gradient-primary flex items-center justify-center text-white">
+                        <i class="fa fa-user-secret text-xl"></i>
+                    </div>
+                    <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-primary">反馈管理平台</h1>
+                </div>
+
+                <!-- 用户信息 -->
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-2">
+                        <img src="https://picsum.photos/id/64/200" alt="管理员头像" class="w-8 h-8 rounded-full object-cover border-2 border-primary">
+                        <span id="adminName" class="font-medium">管理员</span>
+                    </div>
+                    <button id="logoutBtn" class="text-gray-500 hover:text-red-500 transition-smooth">
+                        <i class="fa fa-sign-out text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主内容区 -->
+        <main class="container mx-auto px-4 pt-24 pb-16">
+            <!-- 页面标题 -->
+            <section class="mb-12">
+                <h2 class="text-3xl font-bold mb-4 text-shadow">反馈管理</h2>
+                <p class="text-gray-600">查看和管理用户提交的反馈信息</p>
+            </section>
+
+            <!-- 统计卡片 -->
+            <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                <div class="bg-white rounded-2xl shadow-soft p-6 border border-gray-100">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-medium text-gray-700">总反馈数</h3>
+                        <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                            <i class="fa fa-comments"></i>
+                        </div>
+                    </div>
+                    <p class="text-3xl font-bold" id="totalFeedback">0</p>
+                </div>
+                <div class="bg-white rounded-2xl shadow-soft p-6 border border-gray-100">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-medium text-gray-700">未处理</h3>
+                        <div class="w-10 h-10 rounded-lg bg-yellow-100 flex items-center justify-center text-yellow-500">
+                            <i class="fa fa-clock-o"></i>
+                        </div>
+                    </div>
+                    <p class="text-3xl font-bold" id="pendingFeedback">0</p>
+                </div>
+                <div class="bg-white rounded-2xl shadow-soft p-6 border border-gray-100">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-medium text-gray-700">已处理</h3>
+                        <div class="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center text-green-500">
+                            <i class="fa fa-check"></i>
+                        </div>
+                    </div>
+                    <p class="text-3xl font-bold" id="processedFeedback">0</p>
+                </div>
+            </section>
+
+            <!-- 反馈列表 -->
+            <section class="bg-white rounded-2xl shadow-soft p-6 md:p-8 border border-gray-100 mb-12">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+                    <h3 class="text-xl font-bold mb-4 md:mb-0">反馈列表</h3>
+                    <div class="flex flex-col md:flex-row gap-4">
+                        <div class="relative">
+                            <input type="text" id="searchFeedback" placeholder="搜索反馈..." class="w-full md:w-64 px-4 py-2 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-smooth">
+                            <i class="fa fa-search absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        </div>
+                        <select id="filterStatus" class="w-full md:w-48 px-4 py-2 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-smooth">
+                            <option value="all">全部状态</option>
+                            <option value="pending">未处理</option>
+                            <option value="processed">已处理</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b border-gray-200">
+                                <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">ID</th>
+                                <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">反馈内容</th>
+                                <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">反馈人</th>
+                                <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">联系方式</th>
+                                <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">反馈对象</th>
+                                <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">状态</th>
+                                <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">提交时间</th>
+                                <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="feedbackTableBody">
+                            <!-- 反馈数据将通过JavaScript动态填充 -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-6 flex justify-between items-center">
+                    <p class="text-sm text-gray-600">显示 <span id="showingCount">0</span> 条，共 <span id="totalCount">0</span> 条</p>
+                    <div class="flex gap-2">
+                        <button id="prevPage" disabled class="px-3 py-1 rounded border border-gray-300 text-gray-600 hover:bg-gray-50 transition-smooth">
+                            <i class="fa fa-chevron-left"></i>
+                        </button>
+                        <button id="nextPage" disabled class="px-3 py-1 rounded border border-gray-300 text-gray-600 hover:bg-gray-50 transition-smooth">
+                            <i class="fa fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- 页脚 -->
+        <footer class="bg-dark text-white py-6">
+            <div class="container mx-auto px-4 text-center">
+                <p>&copy; 2026 反馈管理平台 - 版权所有</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- 反馈详情模态框 -->
+    <div id="feedbackModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-2xl shadow-lg p-6 md:p-8 max-w-2xl w-full mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold">反馈详情</h3>
+                <button id="closeModal" class="text-gray-500 hover:text-gray-700 transition-smooth">
+                    <i class="fa fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">反馈内容</label>
+                    <p id="modalContent" class="p-3 border border-gray-200 rounded-lg bg-gray-50"></p>
+                </div>
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">反馈类型</label>
+                        <p id="modalType" class="p-3 border border-gray-200 rounded-lg bg-gray-50"></p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">反馈对象</label>
+                        <p id="modalTarget" class="p-3 border border-gray-200 rounded-lg bg-gray-50"></p>
+                    </div>
+                </div>
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">姓名</label>
+                        <p id="modalName" class="p-3 border border-gray-200 rounded-lg bg-gray-50"></p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">邮箱</label>
+                        <p id="modalEmail" class="p-3 border border-gray-200 rounded-lg bg-gray-50"></p>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">电话</label>
+                    <p id="modalPhone" class="p-3 border border-gray-200 rounded-lg bg-gray-50"></p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">附件</label>
+                    <div id="modalAttachments" class="p-3 border border-gray-200 rounded-lg bg-gray-50"></div>
+                </div>
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">提交时间</label>
+                        <p id="modalTime" class="p-3 border border-gray-200 rounded-lg bg-gray-50"></p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">状态</label>
+                        <select id="modalStatus" class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-smooth">
+                            <option value="pending">未处理</option>
+                            <option value="processed">已处理</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">处理备注</label>
+                    <textarea id="modalNote" rows="3" class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-smooth"></textarea>
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end gap-4">
+                <button id="saveFeedback" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-smooth font-medium">
+                    保存
+                </button>
+                <button id="deleteFeedback" class="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-smooth font-medium">
+                    删除
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 通知提示框 -->
+    <div id="notification" class="fixed top-20 right-4 max-w-sm bg-white rounded-lg shadow-lg p-4 transform translate-x-full transition-transform duration-300 z-50 flex items-start gap-3">
+        <div id="notificationIcon" class="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-green-500 mt-0.5">
+            <i class="fa fa-check"></i>
+        </div>
+        <div class="flex-1">
+            <h4 id="notificationTitle" class="font-medium text-gray-900">操作成功</h4>
+            <p id="notificationMessage" class="text-sm text-gray-600 mt-1">你的操作已成功完成</p>
+        </div>
+        <button id="closeNotification" class="text-gray-400 hover:text-gray-600 transition-smooth">
+            <i class="fa fa-times"></i>
+        </button>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // DOM元素
+        const loginPage = document.getElementById('loginPage');
+        const adminPage = document.getElementById('adminPage');
+        const loginForm = document.getElementById('loginForm');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const feedbackTableBody = document.getElementById('feedbackTableBody');
+        const feedbackModal = document.getElementById('feedbackModal');
+        const closeModal = document.getElementById('closeModal');
+        const saveFeedback = document.getElementById('saveFeedback');
+        const deleteFeedback = document.getElementById('deleteFeedback');
+        const notification = document.getElementById('notification');
+        const notificationTitle = document.getElementById('notificationTitle');
+        const notificationMessage = document.getElementById('notificationMessage');
+        const notificationIcon = document.getElementById('notificationIcon');
+        const closeNotification = document.getElementById('closeNotification');
+        const searchFeedback = document.getElementById('searchFeedback');
+        const filterStatus = document.getElementById('filterStatus');
+        const totalFeedback = document.getElementById('totalFeedback');
+        const pendingFeedback = document.getElementById('pendingFeedback');
+        const processedFeedback = document.getElementById('processedFeedback');
+        const showingCount = document.getElementById('showingCount');
+        const totalCount = document.getElementById('totalCount');
+        const prevPage = document.getElementById('prevPage');
+        const nextPage = document.getElementById('nextPage');
+
+        // 从localStorage获取反馈数据
+        let feedbackData = JSON.parse(localStorage.getItem('feedbackData') || '[]');
+        
+        // 如果没有数据，添加一些示例数据
+        if (feedbackData.length === 0) {
+            feedbackData = [
+                {
+                    id: 1,
+                    content: '网站设计很美观，使用起来很方便，希望能增加更多功能。',
+                    type: '表扬',
+                    name: '张三',
+                    email: 'zhangsan@example.com',
+                    phone: '13800138000',
+                    target: '赵述一',
+                    status: 'pending',
+                    time: '2026-04-18 10:30:00',
+                    attachments: []
+                },
+                {
+                    id: 2,
+                    content: '反馈表单提交后没有收到确认信息，希望能改进。',
+                    type: '建议',
+                    name: '李四',
+                    email: 'lisi@example.com',
+                    phone: '13900139000',
+                    target: '网站管理员',
+                    status: 'pending',
+                    time: '2026-04-18 14:20:00',
+                    attachments: []
+                },
+                {
+                    id: 3,
+                    content: '学校信息更新很及时，感谢网站提供的服务。',
+                    type: '表扬',
+                    name: '王五',
+                    email: 'wangwu@example.com',
+                    phone: '13700137000',
+                    target: '学校',
+                    status: 'processed',
+                    time: '2026-04-17 09:15:00',
+                    attachments: []
+                }
+            ];
+            localStorage.setItem('feedbackData', JSON.stringify(feedbackData));
+        }
+
+        let currentPage = 1;
+        const pageSize = 10;
+        let currentFeedbackId = null;
+
+        // 显示通知
+        function showNotification(title, message, type = 'info') {
+            notificationTitle.textContent = title;
+            notificationMessage.textContent = message;
+
+            // 设置图标和颜色
+            notificationIcon.className = '';
+            if (type === 'success') {
+                notificationIcon.className = 'w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-green-500 mt-0.5';
+                notificationIcon.innerHTML = '<i class="fa fa-check"></i>';
+            } else if (type === 'error') {
+                notificationIcon.className = 'w-6 h-6 rounded-full bg-red-100 flex items-center justify-center text-red-500 mt-0.5';
+                notificationIcon.innerHTML = '<i class="fa fa-times"></i>';
+            } else if (type === 'warning') {
+                notificationIcon.className = 'w-6 h-6 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-500 mt-0.5';
+                notificationIcon.innerHTML = '<i class="fa fa-exclamation"></i>';
+            } else {
+                notificationIcon.className = 'w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-500 mt-0.5';
+                notificationIcon.innerHTML = '<i class="fa fa-info"></i>';
+            }
+
+            // 显示通知
+            notification.classList.remove('translate-x-full');
+
+            // 3秒后自动关闭
+            const timer = setTimeout(() => {
+                notification.classList.add('translate-x-full');
+            }, 3000);
+
+            // 手动关闭
+            closeNotification.onclick = () => {
+                notification.classList.add('translate-x-full');
+                clearTimeout(timer);
+            };
+        }
+
+        // 登录功能
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const username = document.getElementById('adminUsername').value;
+            const password = document.getElementById('adminPassword').value;
+
+            // 简单验证
+            if (username === 'admin' && password === 'admin123') {
+                loginPage.classList.add('hidden');
+                adminPage.classList.remove('hidden');
+                showNotification('登录成功', '欢迎回到反馈管理平台', 'success');
+                loadFeedbackData();
+            } else {
+                showNotification('登录失败', '用户名或密码错误', 'error');
+            }
+        });
+
+        // 登出功能
+        logoutBtn.addEventListener('click', () => {
+            adminPage.classList.add('hidden');
+            loginPage.classList.remove('hidden');
+            document.getElementById('loginForm').reset();
+            showNotification('已登出', '你已成功退出系统', 'info');
+        });
+
+        // 加载反馈数据
+        function loadFeedbackData() {
+            // 过滤和搜索
+            const searchTerm = searchFeedback.value.toLowerCase();
+            const statusFilter = filterStatus.value;
+
+            let filteredData = feedbackData;
+
+            // 按状态过滤
+            if (statusFilter !== 'all') {
+                filteredData = filteredData.filter(item => item.status === statusFilter);
+            }
+
+            // 按搜索词过滤
+            if (searchTerm) {
+                filteredData = filteredData.filter(item => 
+                    item.content.toLowerCase().includes(searchTerm) ||
+                    item.name.toLowerCase().includes(searchTerm) ||
+                    item.email.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            // 分页
+            const totalItems = filteredData.length;
+            const totalPages = Math.ceil(totalItems / pageSize);
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = startIndex + pageSize;
+            const paginatedData = filteredData.slice(startIndex, endIndex);
+
+            // 更新统计数据
+            totalFeedback.textContent = feedbackData.length;
+            pendingFeedback.textContent = feedbackData.filter(item => item.status === 'pending').length;
+            processedFeedback.textContent = feedbackData.filter(item => item.status === 'processed').length;
+            showingCount.textContent = paginatedData.length;
+            totalCount.textContent = totalItems;
+
+            // 更新分页按钮状态
+            prevPage.disabled = currentPage === 1;
+            nextPage.disabled = currentPage === totalPages;
+
+            // 填充表格
+            feedbackTableBody.innerHTML = '';
+            paginatedData.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-b border-gray-200 hover:bg-gray-50 transition-smooth';
+                
+                // 状态样式
+                let statusClass = 'px-2 py-1 rounded text-xs font-medium';
+                if (item.status === 'pending') {
+                    statusClass += ' bg-yellow-100 text-yellow-800';
+                } else {
+                    statusClass += ' bg-green-100 text-green-800';
+                }
+
+                tr.innerHTML = `
+                    <td class="px-4 py-3 text-sm">${item.id}</td>
+                    <td class="px-4 py-3 text-sm">${item.content.substring(0, 50)}${item.content.length > 50 ? '...' : ''}</td>
+                    <td class="px-4 py-3 text-sm">${item.name}</td>
+                    <td class="px-4 py-3 text-sm">${item.email || item.phone}</td>
+                    <td class="px-4 py-3 text-sm">${item.target}</td>
+                    <td class="px-4 py-3 text-sm"><span class="${statusClass}">${item.status === 'pending' ? '未处理' : '已处理'}</span></td>
+                    <td class="px-4 py-3 text-sm">${item.time}</td>
+                    <td class="px-4 py-3 text-sm">
+                        <button class="text-primary hover:text-primary/80 transition-smooth mr-2" onclick="viewFeedback(${item.id})"><i class="fa fa-eye"></i></button>
+                        <button class="text-green-600 hover:text-green-700 transition-smooth mr-2" onclick="editFeedback(${item.id})"><i class="fa fa-edit"></i></button>
+                        <button class="text-red-600 hover:text-red-700 transition-smooth" onclick="confirmDelete(${item.id})"><i class="fa fa-trash"></i></button>
+                    </td>
+                `;
+                
+                feedbackTableBody.appendChild(tr);
+            });
+        }
+
+        // 查看反馈详情
+        window.viewFeedback = function(id) {
+            const feedback = feedbackData.find(item => item.id === id);
+            if (feedback) {
+                currentFeedbackId = id;
+                document.getElementById('modalContent').textContent = feedback.content;
+                document.getElementById('modalType').textContent = feedback.type;
+                document.getElementById('modalTarget').textContent = feedback.target;
+                document.getElementById('modalName').textContent = feedback.name;
+                document.getElementById('modalEmail').textContent = feedback.email || '无';
+                document.getElementById('modalPhone').textContent = feedback.phone || '无';
+                document.getElementById('modalTime').textContent = feedback.time;
+                document.getElementById('modalStatus').value = feedback.status;
+                document.getElementById('modalNote').value = feedback.note || '';
+                
+                // 处理附件
+                const attachmentsContainer = document.getElementById('modalAttachments');
+                if (feedback.attachments.length > 0) {
+                    attachmentsContainer.innerHTML = feedback.attachments.map(file => 
+                        `<div class="flex items-center justify-between p-2 border-b border-gray-100">
+                            <span>${file.name}</span>
+                            <button class="text-primary hover:text-primary/80 transition-smooth">
+                                <i class="fa fa-download"></i>
+                            </button>
+                        </div>`
+                    ).join('');
+                } else {
+                    attachmentsContainer.textContent = '无附件';
+                }
+                
+                feedbackModal.classList.remove('hidden');
+            }
+        };
+
+        // 编辑反馈
+        window.editFeedback = function(id) {
+            window.viewFeedback(id);
+        };
+
+        // 确认删除
+        window.confirmDelete = function(id) {
+            if (confirm('确定要删除这条反馈吗？')) {
+                feedbackData = feedbackData.filter(item => item.id !== id);
+                // 更新localStorage
+                localStorage.setItem('feedbackData', JSON.stringify(feedbackData));
+                loadFeedbackData();
+                showNotification('删除成功', '反馈已成功删除', 'success');
+            }
+        };
+
+        // 关闭模态框
+        closeModal.addEventListener('click', () => {
+            feedbackModal.classList.add('hidden');
+        });
+
+        // 保存反馈
+        saveFeedback.addEventListener('click', () => {
+            if (currentFeedbackId) {
+                const feedback = feedbackData.find(item => item.id === currentFeedbackId);
+                if (feedback) {
+                    feedback.status = document.getElementById('modalStatus').value;
+                    feedback.note = document.getElementById('modalNote').value;
+                    // 更新localStorage
+                    localStorage.setItem('feedbackData', JSON.stringify(feedbackData));
+                    loadFeedbackData();
+                    feedbackModal.classList.add('hidden');
+                    showNotification('保存成功', '反馈信息已成功更新', 'success');
+                }
+            }
+        });
+
+        // 删除反馈（从模态框）
+        deleteFeedback.addEventListener('click', () => {
+            if (currentFeedbackId) {
+                feedbackData = feedbackData.filter(item => item.id !== currentFeedbackId);
+                // 更新localStorage
+                localStorage.setItem('feedbackData', JSON.stringify(feedbackData));
+                loadFeedbackData();
+                feedbackModal.classList.add('hidden');
+                showNotification('删除成功', '反馈已成功删除', 'success');
+            }
+        });
+
+        // 分页按钮
+        prevPage.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                loadFeedbackData();
+            }
+        });
+
+        nextPage.addEventListener('click', () => {
+            const searchTerm = searchFeedback.value.toLowerCase();
+            const statusFilter = filterStatus.value;
+            let filteredData = feedbackData;
+
+            if (statusFilter !== 'all') {
+                filteredData = filteredData.filter(item => item.status === statusFilter);
+            }
+
+            if (searchTerm) {
+                filteredData = filteredData.filter(item => 
+                    item.content.toLowerCase().includes(searchTerm) ||
+                    item.name.toLowerCase().includes(searchTerm) ||
+                    item.email.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            const totalPages = Math.ceil(filteredData.length / pageSize);
+            if (currentPage < totalPages) {
+                currentPage++;
+                loadFeedbackData();
+            }
+        });
+
+        // 搜索和过滤
+        searchFeedback.addEventListener('input', () => {
+            currentPage = 1;
+            loadFeedbackData();
+        });
+
+        filterStatus.addEventListener('change', () => {
+            currentPage = 1;
+            loadFeedbackData();
+        });
+
+        // 模拟添加新反馈（用于测试）
+        function addTestFeedback() {
+            const newFeedback = {
+                id: feedbackData.length + 1,
+                content: '这是一条测试反馈，用于演示系统功能。',
+                type: '测试',
+                name: '测试用户',
+                email: 'test@example.com',
+                phone: '13812345678',
+                target: '赵述一',
+                status: 'pending',
+                time: new Date().toLocaleString('zh-CN'),
+                attachments: []
+            };
+            feedbackData.push(newFeedback);
+            loadFeedbackData();
+            showNotification('添加成功', '测试反馈已成功添加', 'success');
+        }
+
+        // 页面加载时初始化
+        window.addEventListener('DOMContentLoaded', () => {
+            // 可以在这里添加初始化代码
+        });
+    </script>
+</body>
+</html>
